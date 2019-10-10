@@ -117,28 +117,53 @@ for i=1:nOfBlocks
 end
 
 hold on
-plot(tz,result,'g:') % plot the signal
+plot(tz,result ,'g:') % plot the signal
 hold off
-legend('via conv','via fft','via overlap')
-disp(['norm of the difference of the two approaches = ' num2str(norm(z-result))])
-
 
 
 %% 4. block convolution - overlap and save
 
 %lets add the Ny-1 zeros ad the start and end for the transient
 padded_x = [zeros(1,Ny-1) x zeros(1,Ny-1)];
+
 %divide it in overlapping blocks of length N=M+Ny-1
 blockLength = M+Ny-1;
-nOfBlocks2 = length(padded_x)/blockLength;
 
 blocks2 = {};
+BLOCKS2= {};
 
-for i=1:nOfBlocks2
-    startidx=(i-1)*blockLength+1;
-    endidx = i*blockLength;
-    blocks2{1,i}=padded_x(startidx: endidx);
+padded_y = [y zeros(1,M-1)];
+PADDED_Y = T*fft(padded_y);
+
+for i=1:20
+    startidx=(i-1)*M+1;
+    endidx = startidx+(blockLength-1);
+    %make the first block cut
+    blocks2{1,i}=padded_x(startidx : endidx);
+    
+    %now cyclically convolve with y then discard the first 19 samples
+    %fft
+    BLOCKS2{1,i}=T*fft(blocks{1,i});
+    %multiplication with fft of y
+    BLOCKS{1,i}=BLOCKS2{1,i}.*PADDED_Y;
+    %back to time domain
+    blocks2{1,i}=ifft(BLOCKS{1,i})/T;
+    %discard the first Ny-1 values
+    blocks2{1,i}=blocks2{1,i}(Ny:blockLength);
+    %end
 end
 
+result2 = zeros(1,Nx +Ny -1);
 
+for i=1:20
+    for j=1:length(blocks2{1,i}) 
+        result2((i-1)*M+j) = blocks2{1,i}(j);   
+    end
+end
+
+hold on
+plot(tz,result2,'m--') % plot the signal
+hold off
+legend('via conv','via fft','via overlap','via o n s')
+disp(['norm of the difference of the two approaches = ' num2str(norm(z-result2))])
 
