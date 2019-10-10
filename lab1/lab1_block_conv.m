@@ -126,7 +126,19 @@ disp(['norm of the difference of the two approaches = ' num2str(norm(z-result))]
 
 %% 4. block convolution - overlap and save
 
-% you add the rest
-% ...
+%lets add the Ny-1 zeros ad the start and end for the transient
+padded_x = [zeros(1,Ny-1) x zeros(1,Ny-1)];
+%divide it in overlapping blocks of length N=M+Ny-1
+blockLength = M+Ny-1;
+nOfBlocks2 = length(padded_x)/blockLength;
+
+blocks2 = {};
+
+for i=1:nOfBlocks2
+    startidx=(i-1)*blockLength+1;
+    endidx = i*blockLength;
+    blocks2{1,i}=padded_x(startidx: endidx);
+end
+
 
 
