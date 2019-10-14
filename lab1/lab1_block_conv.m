@@ -135,11 +135,17 @@ BLOCKS2= {};
 padded_y = [y zeros(1,M-1)];
 PADDED_Y = T*fft(padded_y);
 
+result3=[];
+
 for i=1:20
     startidx=(i-1)*M+1;
     endidx = startidx+(blockLength-1);
     %make the first block cut
-    blocks2{1,i}=padded_x(startidx : endidx);
+    %blocks2{1,i}=padded_x(startidx : endidx);
+    %alternative way to write this:
+    blocks2{1,i}=padded_x((1:blockLength)+((i-1)*M));
+    
+    
     
     %now cyclically convolve with y then discard the first 19 samples
     %fft
@@ -149,16 +155,21 @@ for i=1:20
     %back to time domain
     blocks2{1,i}=ifft(BLOCKS{1,i})/T;
     %discard the first Ny-1 values
-    blocks2{1,i}=blocks2{1,i}(Ny:blockLength);
+    blocks2{1,i}=blocks2{1,i}(Ny:end);
     %end
+    
+    %result3 = [result3, blocks2{1,i}(Ny:end)];
 end
 
-result2 = zeros(1,Nx +Ny -1);
-
+%result2 = zeros(1,Nx +Ny -1);
+result2 = [];
 for i=1:20
     for j=1:length(blocks2{1,i}) 
-        result2((i-1)*M+j) = blocks2{1,i}(j);   
+        %result2((1-1)*200+1)
+        %result2((i-1)*M+j) = blocks2{1,i}(j);   
+        %result2 = [result2, blocks2{1,i}(j)];
     end
+    result2 = [result2, blocks2{1,i}];
 end
 
 hold on
@@ -166,4 +177,14 @@ plot(tz,result2,'m--') % plot the signal
 hold off
 legend('via conv','via fft','via overlap','via o n s')
 disp(['norm of the difference of the two approaches = ' num2str(norm(z-result2))])
+
+%%  cylic convolution function via fft: x and y must have the same length
+%io praticamente facevo sta roba a mano ogni volta
+
+function z = cyclic_conv(x,y,T)
+    X = T*fft(x);
+    Y = T*fft(y);
+    Z = X.*Y;
+    z = ifft(Z)/T;
+end
 
