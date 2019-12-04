@@ -68,30 +68,32 @@ obj_f = [zeros(1,N/2+1) 1];
 % where x(1:N/2+1) carries the filter samples, and
 % x(N/2+2) is the error value delta
 
-y = linprog(obj_f,A,b);
-x = y(1:(end-1)); %51 samples , stem(x) to see
-delta = y(end);
+result_pl = linprog(obj_f,A,b);
+half_h0 = result_pl(1:(end-1)); %51 samples , stem(x) to see
+delta = result_pl(end);
 
 % 3) show results in time (h0) and frequency (H0)
 
 figure(1)
 
-flipped_x = flipud(x);
-x_mirror = [x;flipped_x(2:end)];
-stem(x_mirror);
-time_axis = [-(N/2)*T:T:(N/2)*T];
+flipped_half_h0 = flipud(half_h0);
+h0 = [half_h0;flipped_half_h0(2:end)];
+stem(h0);
+t = [-(N/2)*T:T:(N/2)*T];
 
 %top plot
 subplot(2,1,1);
-stem(time_axis,x_mirror);
-grid;
+stem(t,h0); grid;
 xlabel('time [t]'); ylabel('filter h0');
 title('filter in time domain');
 
+%X = V*half_h0;
+%from solutions this func is used
+[H0,ff] = freqz(h0,1,8*(N+1),Fp);
+
 %bottom plot
 subplot(2,1,2);
-X = V*x;
-plot(f,X);
+plot(ff,20*log10(abs(H0)));
 grid;
 xlabel('frequency [f]'); ylabel('filter H0');
 title('filter in frequency domain')
